@@ -13,16 +13,14 @@ import jade.lang.acl.MessageTemplate;
  *
  * @author Latif
  */
-public class ConsumerAgent extends Agent { 
-
-
+public class ConsumerAgent extends Agent {
     private String currentSupplier;
-    private double subscriptionCost;
+    private double subscriptionCost = 100.0; // Initial subscription cost
     private int monthCounter = 0;
-    private double credit = 500.0; // Example initial credit
-    private double newSubscriptionCost;
+    private double credit = 500.0;
 
     protected void setup() {
+        System.out.println(getLocalName() + " is initialized.");
         addBehaviour(new TickerBehaviour(this, 1000) {
             @Override
             protected void onTick() {
@@ -34,7 +32,6 @@ public class ConsumerAgent extends Agent {
 
     private void payBill() {
         if (currentSupplier != null) {
-            // Deduct the payment from the credit balance
             credit -= subscriptionCost;
             ACLMessage payment = new ACLMessage(ACLMessage.INFORM);
             payment.addReceiver(getAID(currentSupplier));
@@ -48,39 +45,29 @@ public class ConsumerAgent extends Agent {
     private void evaluateSupplier() {
         monthCounter++;
         if (monthCounter == 3) {
-            // Query all suppliers for their current offers
+            monthCounter = 0;
             ACLMessage query = new ACLMessage(ACLMessage.REQUEST);
             query.setContent("Price Query");
-
-            // Add supplier agents to the receivers list (assuming we know their names)
-            String[] supplierNames = {"Supplier1", "Supplier2"}; // You can dynamically discover agents in a real case
-            for (String supplierName : supplierNames) {
-                query.addReceiver(getAID(supplierName));
-            }
+            query.addReceiver(getAID("Supplier1"));
+            query.addReceiver(getAID("Supplier2"));
             send(query);
 
-            // Listen for responses and evaluate
-            MessageTemplate mt = MessageTemplate.MatchContent("Price:");
-            ACLMessage response = receive(mt);
-            if (response != null) {
-                // Parse the response and choose the supplier with the best offer
-                String[] parts = response.getContent().split(",");
-                double price = Double.parseDouble(parts[0].split(":")[1].trim());
-                double balance = Double.parseDouble(parts[1].split(":")[1].trim());
+            System.out.println(getLocalName() + " sent price query to suppliers.");
 
-                if (price < subscriptionCost || currentSupplier == null) {
-                    // Switch supplier if a better price is found
-                    String newSupplier = response.getSender().getLocalName();
-                    System.out.println(getLocalName() + " is switching from " + currentSupplier + " to " +
-                                       newSupplier + " with new subscription cost: " + price);
+            for (int i = 0; i < 2; i++) {
+                ACLMessage response = blockingReceive(MessageTemplate.MatchPerformative(ACLMessage.INFORM), 2000);
+                if (response != null) {
+                    String[] parts = response.getContent().split(",");
+                    double price = Double.parseDouble(parts[0].split(":")[1].trim());
 
-                    currentSupplier = newSupplier;
-                    subscriptionCost = price;
+                    if (price < subscriptionCost || currentSupplier == null) {
+                        String newSupplier = response.getSender().getLocalName();
+                        System.out.println(getLocalName() + " is switching to " + newSupplier + " with price " + price);
+                        currentSupplier = newSupplier;
+                        subscriptionCost = price;
+                    }
                 }
             }
-
-            monthCounter = 0;
         }
     }
 }
-

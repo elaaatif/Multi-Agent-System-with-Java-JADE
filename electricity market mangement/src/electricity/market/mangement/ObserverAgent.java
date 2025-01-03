@@ -15,9 +15,9 @@ import java.util.*;
  */
 
 public class ObserverAgent extends Agent {
-
     protected void setup() {
-        addBehaviour(new TickerBehaviour(this, 1000) {
+        System.out.println(getLocalName() + " is initialized.");
+        addBehaviour(new TickerBehaviour(this, 2000) {
             @Override
             protected void onTick() {
                 observeSuppliers();
@@ -26,25 +26,20 @@ public class ObserverAgent extends Agent {
     }
 
     private void observeSuppliers() {
-        // Query all suppliers for their metrics
         ACLMessage query = new ACLMessage(ACLMessage.REQUEST);
         query.setContent("Metrics Request");
-
-        // Assuming suppliers are named "Supplier1", "Supplier2", etc.
-        String[] supplierNames = {"Supplier1", "Supplier2"}; // This could be dynamically discovered
-        for (String supplierName : supplierNames) {
-            query.addReceiver(getAID(supplierName));
-        }
+        query.addReceiver(getAID("Supplier1"));
+        query.addReceiver(getAID("Supplier2"));
         send(query);
 
-        // Listen for responses
-        MessageTemplate mt = MessageTemplate.MatchContent("Price:");
-        ACLMessage response = receive(mt);
-        if (response != null) {
-            // Print metrics received from suppliers
-            System.out.println("Observer: Retrieved metrics from supplier " + response.getSender().getLocalName());
-            System.out.println("Supplier: " + response.getContent());
+        System.out.println(getLocalName() + " requested metrics from suppliers.");
+
+        ACLMessage response;
+        while ((response = receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM))) != null) {
+            System.out.println("Observer received metrics from " + response.getSender().getLocalName() +
+                               ": " + response.getContent());
         }
     }
 }
+
 
