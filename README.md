@@ -2,6 +2,8 @@
 
 A multi-agent system (MAS) simulation of an electricity market, where suppliers, consumers, and an observer agent interact to simulate real-world electricity market dynamics. The project is built using the JADE (Java Agent Development Framework) platform, showcasing agent communication, behavior modeling, and market regulation.
 
+![image](https://github.com/user-attachments/assets/d219edab-1433-4481-8cee-1e2d456552b8)
+
 ---
 
 ## **Features**
@@ -35,5 +37,6 @@ A multi-agent system (MAS) simulation of an electricity market, where suppliers,
 ## **Setup Instructions**
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/yourusername/electricity-market-management.git
+   git clone https://github.com/elaaatif/Multi-Agent-System-with-Java-JADE
    cd electricity-market-management
+
